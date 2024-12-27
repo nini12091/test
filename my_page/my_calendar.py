@@ -7,7 +7,7 @@ st.title("🌤️ Sky Plan Scheduler")
 if "current_page" not in st.session_state:
     st.session_state.current_page = "전체 일정"
 
-menu = ["전체 일정", "plan 추가"]
+menu = ["전체 일정", "일정 추가", "일정 삭제"]
 choice = st.sidebar.selectbox("메뉴", menu, index=menu.index(st.session_state.current_page))
 
 st.session_state.current_page = choice
@@ -15,7 +15,7 @@ st.session_state.current_page = choice
 if "schedule_data" not in st.session_state:
     st.session_state.schedule_data = pd.DataFrame(columns=["Title", "Location", "All Day", "Start Date", "End Date", "Repeat"])
 
-if choice == "plan 추가":
+if choice == "일정 추가":
 
     cols = st.columns([1, 4, 1])
     with cols[2]:
@@ -58,11 +58,14 @@ if choice == "plan 추가":
 
 elif choice == "전체 일정":
 
-    cols = st.columns([1, 4, 1])
+    cols = st.columns([4, 1, 1])
+    with cols[1]:
+        if st.button("일정 추가", key="go_to_add_plan_button"):
+            st.session_state.current_page = "일정 추가"
     with cols[2]:
-        if st.button("일정 추가", key="go_to_view_button"):
-            st.session_state.current_page = "plan 추가"
-
+        if st.button("일정 삭제", key="go_to_delete_plan_button"):
+            st.session_state.current_page = "일정 삭제"
+            
     st.subheader("📖 전체 일정")
 
     if st.session_state.schedule_data.empty:
@@ -74,3 +77,26 @@ elif choice == "전체 일정":
         st.write("")
         st.subheader("우선 순위 그래프")
         st.line_chart(priority_data)
+
+elif choice == "일정 삭제":
+    st.subheader("🗑️ 일정 삭제")
+
+    cols = st.columns([1, 4, 1])
+    with cols[2]:
+        if st.button("일정 확인", key="go_to_add_plan_button"):
+            st.session_state.current_page = "전체 일정"
+
+    if st.session_state.schedule_data.empty:
+        st.info("삭제할 일정이 없습니다. 먼저 'plan 추가'에서 일정을 추가하세요.")
+    else:
+        title_to_delete = st.selectbox(
+            "삭제할 일정 선택", 
+            st.session_state.schedule_data["Title"].unique(), 
+            key="delete_selectbox"
+        )
+
+        if st.button("삭제", key="delete_button"):
+            st.session_state.schedule_data = st.session_state.schedule_data[
+                st.session_state.schedule_data["Title"] != title_to_delete
+            ]
+            st.success(f"일정 '{title_to_delete}'이(가) 삭제되었습니다!")
